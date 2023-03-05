@@ -133,14 +133,18 @@
 ;;; Encodings
 ;; Contrary to what many Emacs users have in their configs, you don't need more
 ;; than this to make UTF-8 the default coding system:
-(set-language-environment "UTF-8")
-;; ...but `set-language-environment' also sets `default-input-method', which is
-;; a step too opinionated.
-(setq default-input-method nil)
-;; ...And the clipboard on Windows is often a wider encoding (UTF-16), so leave
-;; Emacs to its own devices there.
-(unless doom--system-windows-p
-  (setq selection-coding-system 'utf-8))
+(defun init-coding-system-h ()
+  (set-language-environment "UTF-8")
+  ;; ...but `set-language-environment' also sets `default-input-method', which is
+  ;; a step too opinionated.
+  (setq default-input-method nil)
+  ;; ...And the clipboard on Windows could be in a wider encoding (UTF-16), so
+  ;; leave Emacs to its own devices there.
+  (unless doom--system-windows-p
+    (setq selection-coding-system 'utf-8))
+  (if (display-graphic-p)
+      (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING))))
+(add-hook 'before-init-hook #'init-coding-system-h 'append)
 
 
 ;;
