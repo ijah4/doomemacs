@@ -91,8 +91,11 @@
                                                   evil-state)))
                 (doom-lookup-key (kbd "TAB") (list (current-local-map))))
             cmd)
-           ((fboundp 'evil-jump-item)
-            #'evil-jump-item))))
+          ((evil-visual-state-p)
+           (if (fboundp #'evil-indent) #'evil-indent #'indent-for-tab-command))
+          (t (cmd! (condition-case err (evil-jump-item)
+                  (user-error (call-interactively #'evil-indent))
+                  (t (indent-for-tab-command)))))))))
       ;; Extend smart tab for specific modes. This way, we process the entire
       ;; smart tab logic and only fall back to these commands at the end.
       (:when (modulep! :lang org)
@@ -111,7 +114,7 @@
        :n [tab]     #'forward-button
        :n [backtab] #'backward-button)
       (:after view :map view-mode-map
-       [escape]  #'View-quit-all)
+              [escape]  #'View-quit-all)
       (:after man :map Man-mode-map
        :n "q"    #'kill-current-buffer)
       (:after geiser-doc :map geiser-doc-mode-map
@@ -123,26 +126,26 @@
         :m "gsh" #'+org/goto-visible))
 
       (:when (modulep! :editor multiple-cursors)
-       :prefix "gz"
-       :nv "d" #'evil-mc-make-and-goto-next-match
-       :nv "D" #'evil-mc-make-and-goto-prev-match
-       :nv "s" #'evil-mc-skip-and-goto-next-match
-       :nv "S" #'evil-mc-skip-and-goto-prev-match
-       :nv "c" #'evil-mc-skip-and-goto-next-cursor
-       :nv "C" #'evil-mc-skip-and-goto-prev-cursor
-       :nv "j" #'evil-mc-make-cursor-move-next-line
-       :nv "k" #'evil-mc-make-cursor-move-prev-line
-       :nv "m" #'evil-mc-make-all-cursors
-       :nv "n" #'evil-mc-make-and-goto-next-cursor
-       :nv "N" #'evil-mc-make-and-goto-last-cursor
-       :nv "p" #'evil-mc-make-and-goto-prev-cursor
-       :nv "P" #'evil-mc-make-and-goto-first-cursor
-       :nv "q" #'evil-mc-undo-all-cursors
-       :nv "t" #'+multiple-cursors/evil-mc-toggle-cursors
-       :nv "u" #'+multiple-cursors/evil-mc-undo-cursor
-       :nv "z" #'+multiple-cursors/evil-mc-toggle-cursor-here
-       :v  "I" #'evil-mc-make-cursor-in-visual-selection-beg
-       :v  "A" #'evil-mc-make-cursor-in-visual-selection-end)
+        :prefix "gz"
+        :nv "d" #'evil-mc-make-and-goto-next-match
+        :nv "D" #'evil-mc-make-and-goto-prev-match
+        :nv "s" #'evil-mc-skip-and-goto-next-match
+        :nv "S" #'evil-mc-skip-and-goto-prev-match
+        :nv "c" #'evil-mc-skip-and-goto-next-cursor
+        :nv "C" #'evil-mc-skip-and-goto-prev-cursor
+        :nv "j" #'evil-mc-make-cursor-move-next-line
+        :nv "k" #'evil-mc-make-cursor-move-prev-line
+        :nv "m" #'evil-mc-make-all-cursors
+        :nv "n" #'evil-mc-make-and-goto-next-cursor
+        :nv "N" #'evil-mc-make-and-goto-last-cursor
+        :nv "p" #'evil-mc-make-and-goto-prev-cursor
+        :nv "P" #'evil-mc-make-and-goto-first-cursor
+        :nv "q" #'evil-mc-undo-all-cursors
+        :nv "t" #'+multiple-cursors/evil-mc-toggle-cursors
+        :nv "u" #'+multiple-cursors/evil-mc-undo-cursor
+        :nv "z" #'+multiple-cursors/evil-mc-toggle-cursor-here
+        :v  "I" #'evil-mc-make-cursor-in-visual-selection-beg
+        :v  "A" #'evil-mc-make-cursor-in-visual-selection-end)
 
       ;; misc
       :n "C-S-f"  #'toggle-frame-fullscreen
