@@ -54,6 +54,14 @@ Must be a `font-spec', a font object, an XFT font string, or an XLFD string. See
 WARNING: if you specify a size for this font it will hard-lock any usage of this
 font to that size. It's rarely a good idea to do so!")
 
+(defcustom doom-cjk-font nil
+  "Fallback font for cjk.
+Must be a `font-spec', a font object, an XFT font string, or an XLFD string. See
+`doom-font' for examples.
+
+WARNING: if you specify a size for this font it will hard-lock any usage of this
+font to that size. It's rarely a good idea to do so!")
+
 (defconst doom-emoji-fallback-font-families
   '("Apple Color Emoji"
     "Segoe UI Emoji"
@@ -71,8 +79,7 @@ These are platform-specific fallbacks for internal use. If you
 want to change your symbol font, use `doom-symbol-font'.")
 
 (defvar doom-cjk-fallback-font-families
-  '("Zpix"
-    "WenQuanYi Micro Hei Mono"
+  '("PingFang SC"
     "Microsoft YaHei")
   "A list of fallback font families to use for emojis.")
 
@@ -518,7 +525,8 @@ windows, switch to `doom-fallback-buffer'. Otherwise, delegate to original
         (dolist (map `((default . ,doom-font)
                        (fixed-pitch . ,doom-font)
                        (fixed-pitch-serif . ,doom-serif-font)
-                       (variable-pitch . ,doom-variable-pitch-font)))
+                       (variable-pitch . ,doom-variable-pitch-font)
+                       (header-line . ,doom-cjk-font)))
           (condition-case e
               (when-let* ((face (car map))
                           (font (cdr map)))
@@ -556,11 +564,12 @@ windows, switch to `doom-fallback-buffer'. Otherwise, delegate to original
              (symbol-font (or doom-symbol-font
                               (cl-find-if fn doom-symbol-fallback-font-families)))
              (emoji-font (or doom-emoji-font
-                             (cl-find-if fn doom-emoji-fallback-font-families))))
-        (when-let (font (cl-find-if fn doom-cjk-fallback-font-families))
-          (set-fontset-font t '(#x4e00 . #x9fff) font nil 'prepend)
-          (dolist (script '(kana han cjk-misc bopomofo))
-            (set-fontset-font (frame-parameter nil 'font) script font)))
+                             (cl-find-if fn doom-emoji-fallback-font-families)))
+             (cjk-font (or doom-cjk-font
+                           (cl-find-if fn doom-cjk-fallback-font-families))))
+        (when cjk-font
+          (dolist (script '(kana han cjk-misc bopomofo (#x4e00 . #x9fff)))
+            (set-fontset-font t script cjk-font)))
         (when symbol-font
           (dolist (script '(symbol mathematical))
             (set-fontset-font t script symbol-font)))
