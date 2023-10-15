@@ -73,7 +73,8 @@ Doesn't work in terminal Emacs."
       (let (changed)
         (dolist (sym '((doom-font . default)
                        (doom-serif-font . fixed-pitch-serif)
-                       (doom-variable-pitch-font . variable-pitch))
+                       (doom-variable-pitch-font . variable-pitch)
+                       (doom-cjk-font . header-line))
                      (when changed
                        (doom-init-fonts-h 'reload)
                        t))
