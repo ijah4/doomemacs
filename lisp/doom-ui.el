@@ -70,6 +70,11 @@ want to change your emoji font, use `doom-emoji-font'.")
 These are platform-specific fallbacks for internal use. If you
 want to change your symbol font, use `doom-symbol-font'.")
 
+(defvar doom-cjk-fallback-font-families
+  '("Zpix"
+    "WenQuanYi Micro Hei Mono"
+    "Microsoft YaHei")
+  "A list of fallback font families to use for emojis.")
 
 ;;
 ;;; Custom hooks
@@ -552,6 +557,10 @@ windows, switch to `doom-fallback-buffer'. Otherwise, delegate to original
                               (cl-find-if fn doom-symbol-fallback-font-families)))
              (emoji-font (or doom-emoji-font
                              (cl-find-if fn doom-emoji-fallback-font-families))))
+        (when-let (font (cl-find-if fn doom-cjk-fallback-font-families))
+          (set-fontset-font t '(#x4e00 . #x9fff) font nil 'prepend)
+          (dolist (script '(kana han cjk-misc bopomofo))
+            (set-fontset-font (frame-parameter nil 'font) script font)))
         (when symbol-font
           (dolist (script '(symbol mathematical))
             (set-fontset-font t script symbol-font)))
