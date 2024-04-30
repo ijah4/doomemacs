@@ -91,11 +91,13 @@
                                                   evil-state)))
                 (doom-lookup-key (kbd "TAB") (list (current-local-map))))
             cmd)
-          ((evil-visual-state-p)
-           (if (fboundp #'evil-indent) #'evil-indent #'indent-for-tab-command))
-          (t (cmd! (condition-case err (evil-jump-item)
-                  (user-error (call-interactively #'evil-indent))
-                  (t (indent-for-tab-command)))))))))
+          ((evil-visual-state-p) #'evil-indent)
+          (t (lambda (&rest _)
+               (interactive)
+               (condition-case err
+                   (evil-jump-item)
+                 (user-error (call-interactively (function evil-indent)))
+                 (t (call-interactively (function indent-for-tab-command)))))))))
       ;; Extend smart tab for specific modes. This way, we process the entire
       ;; smart tab logic and only fall back to these commands at the end.
       (:when (modulep! :lang org)

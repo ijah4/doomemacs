@@ -246,5 +246,103 @@ If the current buffer is not an indirect buffer, it is `widen'ed."
       (widen)
     (narrow-to-region beg end)))
 
+;;
+;;; windows layout
+
+;;;###autoload
+(defun split-window-func-with-other-buffer (split-function)
+  (lambda (&optional arg)
+    "Split this window and switch to the new window unless ARG is provided."
+    (interactive "P")
+    (funcall split-function)
+    (let ((target-window (next-window)))
+      (set-window-buffer target-window (other-buffer))
+      (unless arg
+        (select-window target-window)))))
+
+;;;###autoload
+(defun doom/toggle-delete-other-windows ()
+  "Delete other windows in frame if any, or restore previous window config."
+  (interactive)
+  (if (and winner-mode (equal (selected-window) (next-window)))
+      (winner-undo)
+    (delete-other-windows)))
+
+;;;###autoload
+(defun split-window-horizontally-instead ()
+  "Kill any other windows and re-split such that the current window is
+on the top half of the frame."
+  (interactive)
+  (let ((other-buffer (and (next-window) (window-buffer (next-window)))))
+    (delete-other-windows)
+    (split-window-horizontally)
+    (when other-buffer
+      (set-window-buffer (next-window) other-buffer))))
+
+;;;###autoload
+(defun split-window-vertically-instead ()
+  "Kill any other windows and re-split such that the current window is
+on the left half of the frame."
+  (interactive)
+  (let ((other-buffer (and (next-window) (window-buffer (next-window)))))
+    (delete-other-windows)
+    (split-window-vertically)
+    (when other-buffer
+      (set-window-buffer (next-window) other-buffer))))
+
+;;;###autoload
+(defun doom/split-window()
+  "Split the window to see the most recent buffer in the other window.
+Call a second time to restore the original window configuration."
+  (interactive)
+  (if (eq last-command 'doom/split-window)
+      (progn
+        (jump-to-register :doom/split-window)
+        (setq this-command 'doom/unsplit-window))
+    (window-configuration-to-register :doom/split-window)
+    (switch-to-buffer-other-window nil)))
+
+;;;###autoload
+(defun doom/toggle-current-window-dedication ()
+  "Toggle whether the current window is dedicated to its current buffer."
+  (interactive)
+  (let* ((window (selected-window))
+         (was-dedicated (window-dedicated-p window)))
+    (set-window-dedicated-p window (not was-dedicated))
+    (message "Window %sdedicated to %s"
+             (if was-dedicated "no longer " "")
+             (buffer-name))))
+
+;;
+;;; pretty formfeed
+
+;;;###autoload
+(defun jah-insert-formfeed ()
+  "Insert a form feed char (codepoint 12)"
+  (interactive)
+  (insert "\u000c\n"))
+
+;;;###autoload
+(defun jah-show-formfeed-as-line (&optional frame)
+  "Display the formfeed ^L char as line."
+  (interactive)
+  (letf! (defun pretty-formfeed-line (window)
+           (with-current-buffer (window-buffer window)
+             (with-selected-window window
+               (when (not buffer-display-table)
+                 (setq buffer-display-table (make-display-table)))
+               (aset buffer-display-table ?\^L
+                     (vconcat (make-list 70 (make-glyph-code ?─ 'font-lock-comment-face))))
+               (redraw-frame))))
+    (unless (minibufferp)
+      (mapc 'pretty-formfeed-line (window-list frame 'no-minibuffer)))))
+
+;;;###autoload
+(dolist (hook '(window-configuration-change-hook
+                window-size-change-functions
+                after-setting-font-hook
+                display-line-numbers-mode-hook))
+  (add-hook hook #'jah-show-formfeed-as-line))
+
 (provide 'doom-lib '(ui))
 ;;; ui.el ends here
