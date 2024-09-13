@@ -613,6 +613,8 @@ wasn't active when this was called."
 ;;
 ;;; Reasonable, global defaults
 
+(setq help-enable-completion-autoload nil)
+
 ;;; Don't litter `doom-emacs-dir'/$HOME
 ;; HACK: I change `user-emacs-directory' because many packages (even built-in
 ;;   ones) abuse it to build paths for storage/cache files (instead of correctly

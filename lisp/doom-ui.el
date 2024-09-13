@@ -141,6 +141,24 @@ or if the current buffer is read-only or not file-visiting."
     (cl-pushnew 'face whitespace-style) ; must be first
     (whitespace-mode +1)))
 
+(define-minor-mode doom-highlight-long-lines-mode
+  "Minor mode for highlighting long lines."
+  :after-hook
+  (if doom-highlight-long-lines-mode
+      (progn
+        (setq-local whitespace-style '(face lines-tail))
+        (setq-local whitespace-line-column 79)
+        (whitespace-mode +1))
+    (whitespace-mode -1)
+    (kill-local-variable 'whitespace-style)
+    (kill-local-variable 'whitespace-line-column)))
+(add-hook 'prog-mode-hook #'doom-highlight-long-lines-mode)
+(defun toggle-doom-highlight-long-lines-mode ()
+  (if doom-highlight-long-lines-mode
+      (doom-highlight-long-lines-mode -1)
+    (doom-highlight-long-lines-mode +1)))
+(add-hook! '(ediff-prepare-buffer-hook ediff-quit-hook) #'toggle-doom-highlight-long-lines-mode)
+
 
 ;;
 ;;; General UX
@@ -266,7 +284,16 @@ windows, switch to `doom-fallback-buffer'. Otherwise, delegate to original
 ;;; Windows/frames
 
 ;; A simple frame title
-(setq frame-title-format '("%b – Doom Emacs")
+(setq frame-title-format
+      '(""
+        (:eval
+         (if (eq major-mode 'org-mode)
+             (replace-regexp-in-string
+              ".*/[0-9]*-?" "☰ "
+              (subst-char-in-string ?_ ?  (or buffer-file-name "NULL")))
+           "%b"))
+        (:eval (format (if (buffer-modified-p)  " ◉ %s" "  ●  %s")
+                       (doom-project-name))))
       icon-title-format frame-title-format)
 
 ;; Don't resize the frames in steps; it looks weird, especially in tiling window
@@ -281,8 +308,7 @@ windows, switch to `doom-fallback-buffer'. Otherwise, delegate to original
 ;;   and don't match the look of Emacs. They also impose inconsistent shortcut
 ;;   key paradigms. I'd rather Emacs be responsible for prompting.
 (setq use-dialog-box nil)
-(when (bound-and-true-p tooltip-mode)
-  (tooltip-mode -1))
+(and (bound-and-true-p tooltip-mode) (tooltip-mode -1))
 
 ;; FIX: The native border "consumes" a pixel of the fringe on righter-most
 ;;   splits, `window-divider' does not. Available since Emacs 25.1.
@@ -296,9 +322,16 @@ windows, switch to `doom-fallback-buffer'. Otherwise, delegate to original
 (setq split-width-threshold 160
       split-height-threshold nil)
 
+;;
+;;; pixel-scroll
+(customize-set-variable 'pixel-scroll-precision-large-scroll-height 40)
+(customize-set-variable 'pixel-scroll-precision-interpolation-factor 8.0)
+(pixel-scroll-precision-mode +1)
 
 ;;
 ;;; Minibuffer
+
+(setq minibuffer-message-properties '(face minibuffer-prompt))
 
 ;; Allow for minibuffer-ception. Sometimes we need another minibuffer command
 ;; while we're in the minibuffer.
@@ -329,6 +362,11 @@ windows, switch to `doom-fallback-buffer'. Otherwise, delegate to original
 
 ;;
 ;;; Built-in packages
+
+;;;###package tramp
+(after! tramp
+  (setenv "SHELL" "/bin/bash")
+  (setq tramp-shell-prompt-pattern "\\(?:^\\|\n\\|\x0d\\)[^]#$%>\n]*#?[]#$%>] *\\(\e\\[[0-9;]*[a-zA-Z] *\\)*")) ;; default + 
 
 ;;;###package ansi-color
 (setq ansi-color-for-comint-mode t)

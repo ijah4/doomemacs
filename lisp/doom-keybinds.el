@@ -39,16 +39,16 @@ and Emacs states, and for non-evil users.")
  (doom--system-macos-p
   ;; mac-* variables are used by the special emacs-mac build of Emacs by
   ;; Yamamoto Mitsuharu, while other builds use ns-*.
-  (setq mac-command-modifier      'super
-        ns-command-modifier       'super
-        mac-option-modifier       'meta
-        ns-option-modifier        'meta
+  (setq mac-command-modifier      'meta
+        ns-command-modifier       'meta
+        mac-option-modifier       'super
+        ns-option-modifier        'super
         ;; Free up the right option for character composition
         mac-right-option-modifier 'none
         ns-right-option-modifier  'none))
  (doom--system-windows-p
-  (setq w32-lwindow-modifier 'super
-        w32-rwindow-modifier 'super)))
+  (setq w32-lwindow-modifier      'super
+        w32-rwindow-modifier      'super)))
 
 ;; HACK: Emacs can't distinguish C-i from TAB, or C-m from RET, in either GUI or
 ;;   TTY frames.  This is a byproduct of its history with the terminal, which
